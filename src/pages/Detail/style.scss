@@ -1,0 +1,154 @@
+@import '../../app/styles/color';
+
+.detail {
+ 
+  display: flex;
+  justify-content: center;
+  z-index: 2;
+
+  &__track {
+    margin-top: 0;
+  }
+
+  &__controls {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__info {
+    text-align: center;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    max-width: 300px;
+  }
+
+  &__buttons {
+    margin-top: 5px;
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    align-items: center;
+
+    @media screen and (min-width: 375px) {
+      margin-top: 25px;
+    }
+  }
+
+  &__timing {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .title, .artist {
+    padding: 0;
+    margin: 0;
+    text-transform: capitalize;
+  }
+
+  .title {
+    margin-bottom: 5px;
+    width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .prev-button, .next-button {
+    border: 0;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, .09);
+    transition: background-color .2s;
+    position: relative;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, .2);
+    }
+
+    &:active {
+      background-color: rgba(0, 0, 0, .09);
+    }
+
+    svg {
+      fill: $base-color;
+    }
+
+    &:before {
+      content: '';
+      display: block;
+      position: absolute;
+      opacity: .01;
+      width: 100%;
+      height: 100%;
+      border: solid 2px $border-color;
+      border-radius: 50px;
+      transition: opacity .3s;
+      box-shadow: 0px 0px 0px 4px rgba(123, 177, 243, 0.43);
+      top: -2px;
+    }
+  }
+
+  .prev-button:focus, .next-button:focus {
+    outline: 0;
+  }
+
+  .prev-button:focus::before, .next-button:focus::before {
+    opacity: .57;
+  }
+
+  .next-button, .prev-button {
+    &::after {
+      content: '';
+      display: block;
+      height: 16px;
+      width: 3px;
+      position: absolute;
+      border-radius: 6px;
+      background: $base-color;
+    }
+  }
+
+  .next-button {
+    &::after {
+      margin-left: 10px;
+    }
+  }
+
+  .prev-button {
+    &::after {
+      margin-left: -10px;
+    }
+
+    svg {
+      transform: scale(-1);
+    }
+  }
+
+  .time {
+    color: $primary-font-color;
+  }
+
+  .play, .pause {
+    height: 70px;
+    width: 70px;
+  }
+
+  .play {
+    svg {
+      margin-left: 5px;
+    }
+  }
+
+  .pause {
+    svg {
+      stroke-width: 2px;
+      stroke: #fff;
+    }
+  }
+}

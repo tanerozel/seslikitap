@@ -1,0 +1,49 @@
+{
+  "name": "pwa-playlist",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "enzyme": "^3.10.0",
+    "enzyme-adapter-react-16": "^1.15.1",
+    "fast-average-color": "^5.2.1",
+    "history": "^4.10.1",
+    "node-sass": "^4.13.0",
+    "prop-types": "^15.7.2",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "react-loadable": "^5.5.0",
+    "react-scripts": "^3.3.0",
+    "react-test-renderer": "^16.12.0"
+  },
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --runInBand --no-cache",
+    "coverage": "react-scripts test --coverage",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "jest": {
+    "resetMocks": true,
+    "collectCoverageFrom": [
+      "**/src/app/index.js",
+      "**/src/components/**/*.js",
+      "**/src/pages/**/*.js",
+      "**/src/helpers/*.js"
+    ]
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "devDependencies": {
+    "json-loader": "^0.5.7"
+  }
+}

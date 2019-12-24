@@ -1,0 +1,301 @@
+import React, { PureComponent, Suspense, lazy } from 'react';
+import { createBrowserHistory } from 'history'
+import Home from '../pages/Home';
+import percent from '../helpers/percent';
+import Menu from '../components/Menu';
+import Page from '../components/Page';
+import Loader from '../components/Loader';
+import Audio from '../helpers/audio';
+import { initialState } from '../data';
+import './style.scss'; 
+import items from '../items.json';
+
+ 
+//let muisc = require("../music/doktorun_karisi.mp3")
+
+const List = lazy(() => import('../pages/List'));
+const About = lazy(() => import('../pages/About'));
+const Detail = lazy(() => import('../pages/Detail'));
+
+class App extends PureComponent {
+  constructor(props) {
+    super(props);
+
+    // this.playlistUrl = `https://api.soundcloud.com/users/${process.env.REACT_APP_SOUNDCLOUD_USER_ID}/playlists?client_id=${process.env.REACT_APP_SOUNDCLOUD_APP_CLIENT_ID}`;
+    this.state = {
+      ...initialState
+    };
+
+    this.history = createBrowserHistory();
+  }
+
+  componentDidMount() {
+    this.history.listen((location) => {
+      this.setState(() => {
+        return { currentView: this.history.location.state.view || '/' };
+      });
+
+      if (location.state.view === 'list' && !this.state.tracks[0].id) {
+        this.fetchPlayList();
+      };
+    });
+
+    this.setupAudio();
+
+    this.history.push('/', { view: 'home' });
+  }
+
+  onStartClick = () => {
+    this.changeView('list');
+  }
+
+  fetchPlayList = async () => {
+    // const result = await fetch(this.playlistUrl);
+    //const data = await result.json();
+ 
+    console.log(items);
+    let data = items;
+    this.updateSate(data);
+  }
+
+  updateSate(data) {
+    const updatedState = {
+      tracks: [...data.map((track, index) => {
+        return Object.assign({}, {
+          ...this.state.track,
+          id: track.index,
+          stream_url: 'https://seslikitap.site//music/' + track.music_url,
+          uri: track.uri,
+          duration:track.length_seconds,
+          favoritings_count: track.favoritings_count,
+          artist: "",
+          artwork_url: track.thumbnails,
+          title: track.title.toLowerCase(),
+          permalink_url: track.permalink_url,
+          index,
+        });
+      })],
+      playlistLoaded: true,
+    };
+
+    this.setState(() => updatedState);
+  }
+
+  changeView(view) {
+    this.history.push(`/${view}`, { view });
+  }
+
+  setTrack(track) {
+    this.setState(() => {
+      return {
+        track,
+        currentTime: 20,
+        paused: true,
+        played: false,
+        playing: false,
+        changingTrack: true
+      };
+    });
+  }
+
+  canChangeTrack() {
+    return this.state.changingTrack === false;
+  }
+
+  getNextTrack() {
+    const nextTrack = this.state.tracks[this.state.track.index + 1];
+
+    return nextTrack ? { ...nextTrack } : null;
+  }
+
+  getPreviousTrack() {
+    const prevTrack = this.state.tracks[this.state.track.index - 1];
+
+    return prevTrack ? { ...prevTrack } : null;
+  }
+
+  changeTrack(track) {
+    if (this.canChangeTrack() && track) {
+      this.setTrack(track);
+      this.onPlayClick(track);
+    }
+  }
+
+  selectTrack = (id) => {
+    return this.state.tracks.filter((track) => Number(id) === track.id)[0];
+  }
+
+  setupAudio() {
+    this.timeupdate = this.timeupdate.bind(this);
+    this.audioStop = this.audioStop.bind(this);
+    this.loadMetaData = this.loadMetaData.bind(this);
+    this.audio = new Audio(document.querySelector('#audio'), this.props.audioContext);   
+    this.audio.setup();
+    this.audio.setTimerHandler(this.timeupdate);
+    this.audio.setStopHandler(this.audioStop);
+    this.audio.canplay(() => {
+      this.setState(() => {
+        return {
+          changingTrack: false
+        };
+      });
+    })
+  }
+
+  audioStop() {
+    this.setState({
+      track: {
+        ...this.state.track, currentTime: 0, percentage: 0, playing: false,
+        played: false,
+        paused: true,
+      }
+    });
+  }
+  loadMetaData=(evt)=>{
+    console.log(evt);
+  }
+
+
+
+  timeupdate = (evt) => {
+    //console.log(evt);
+    localStorage.setItem("current-time"+this.state.track.id,evt.target.currentTime);
+    this.setState({
+      track: {
+        ...this.state.track, currentTime: evt.target.currentTime,
+        percentage: percent(evt.target.currentTime, evt.target.duration) / 100
+      }
+    });
+  }
+
+  onListClick = (id) => {
+    if (id !== this.state.track.id) {
+      this.audio.setAudioSource('');
+    }
+
+    const track = {
+      ...this.selectTrack(id),
+      currentTime: 0,
+      percentage: 0,
+      playing: this.state.track.id === id ? this.state.track.playing : false,
+      played: this.state.track.id === id ? this.state.track.played : false,
+      paused: this.state.track.id === id ? this.state.track.paused : true,
+    };
+
+    this.setState(() => {
+      return { track };
+    });
+
+    this.changeView('detail');
+
+    this.onPlayClick(track);
+  }
+
+  onPlayClick = (track) => {
+    if (!track.played) {
+          this.audio.setAudioSource(`${track.stream_url}`);    
+
+       var key =localStorage.getItem("current-time"+track.id);
+      if(key){
+        this.audio.setCurrentTime(key);
+      } 
+    }
+
+    this.setState(() => {
+      return {
+        track: {
+          ...track,
+          paused: false,
+          playing: true,
+          played: true
+        }
+      };
+    });
+
+    this.audio.resume();
+    this.audio.play();
+  }
+
+  onPauseClick = (track) => {
+    this.audio.pause();
+
+    this.setState(() => {
+      return {
+        track: {
+          ...track,
+          paused: true,
+          playing: false
+        }
+      }
+    });
+  }
+
+  onBackClick = () => {
+    this.history.go(-1);
+
+    this.setState(() => {
+      return { currentView: this.history.location.state.view || '/' };
+    });
+  }
+
+  onAboutClick = () => {
+    this.changeView('about');
+  }
+
+  onPlayNext = () => {
+    this.changeTrack(this.getNextTrack());
+  }
+
+  onPlayPrev = () => {
+    this.changeTrack(this.getPreviousTrack());
+  }
+
+  onRepeatClick = () => {
+    const repeat = !this.state.repeat;
+
+    this.setState(() => {
+      return { repeat };
+    });
+
+    this.audio.repeat(repeat);
+  }
+
+  render() {
+    return (
+      <main className="app">
+        <audio id="audio" crossOrigin="anonymous"></audio>
+        <div className="shell">
+          <Menu history={this.history}
+            activeView={this.state.currentView}
+            onBackClick={this.onBackClick}
+            onAboutClick={this.onAboutClick}
+            onCloseClick={this.onBackClick} />
+          <div className="page-wrapper">
+            <Page className="home" active={this.state.currentView === 'home'}>
+              <Home onStartClick={this.onStartClick} />
+            </Page>
+            <Suspense fallback={<Loader />}>
+              <Page className="list" active={this.state.currentView === 'list'}>
+                <List track={this.state.track} tracks={this.state.tracks} onClick={this.onListClick} />
+              </Page>
+              <Page className="detail" active={this.state.currentView === 'detail'}>
+                <Detail track={this.state.track}
+                  repeat={this.state.repeat}
+                  onRepeatClick={this.onRepeatClick}
+                  onPlayClick={this.onPlayClick}
+                  onPlayNext={this.onPlayNext}
+                  onPlayPrev={this.onPlayPrev}
+                  onPauseClick={this.onPauseClick} />
+              </Page>
+              <Page className="about" active={this.state.currentView === 'about'}>
+                <About />
+              </Page>
+            </Suspense>
+          </div>
+        </div>
+      </main >
+    );
+  }
+}
+
+export default App;
